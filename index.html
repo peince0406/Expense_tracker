@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- ─────────────── AUTH ─────────────── -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">Expense<span>.</span></div>
+    <p class="auth-sub">Apna paisa track karo — smart tarike se</p>
+
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="login-user" placeholder="Enter username" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Login</button>
+      <div class="auth-error" id="login-err"></div>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signup-form" style="display:none">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="su-user" placeholder="Enter username" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="su-email" placeholder="Enter Email" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="su-pass" placeholder="Enter password" autocomplete="new-password">
+      </div>
+      <button class="btn-primary" onclick="doSignup()">Singup</button>
+      <div class="auth-error" id="signup-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────── APP ─────────────── -->
+<div id="app-screen" style="display:none">
+  <div class="topbar">
+    <div class="topbar-logo">Expense<span>.</span></div>
+    <div class="topbar-right">
+      <div class="user-pill">👋 <strong id="top-username"></strong></div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <h3>Overview</h3>
+      <div class="stat-card">
+        <div class="stat-label">Total Expenses</div>
+        <div class="stat-value green" id="stat-total">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">This Month</div>
+        <div class="stat-value" id="stat-month">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Count</div>
+        <div class="stat-value" id="stat-count">0</div>
+      </div>
+
+      <div class="filter-section">
+        <h3>Filter by Time</h3>
+        <button class="filter-btn active" onclick="setFilter('all', this)">🗂 All</button>
+        <button class="filter-btn" onclick="setFilter('past_week', this)">📅 One Week</button>
+        <button class="filter-btn" onclick="setFilter('past_month', this)">📆 One month</button>
+        <button class="filter-btn" onclick="setFilter('last_3_months', this)">🗓 3 Month</button>
+        <button class="filter-btn" onclick="toggleCustom(this)">✏️ Custom Range</button>
+
+        <div class="filter-custom" id="custom-filter">
+          <div class="field">
+            <label>date</label>
+            <input type="date" id="filter-start">
+          </div>
+          <div class="field">
+            <label>date</label>
+            <input type="date" id="filter-end">
+          </div>
+          <button class="btn-sm" onclick="applyCustomFilter()">Apply</button>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h3>Category</h3>
+        <div class="cat-chips">
+          <button class="cat-chip active" onclick="setCatFilter('all', this)">All</button>
+          <button class="cat-chip" onclick="setCatFilter('Groceries', this)">🛒 Groceries</button>
+          <button class="cat-chip" onclick="setCatFilter('Leisure', this)">🎮 Gaming</button>
+          <button class="cat-chip" onclick="setCatFilter('Electronics', this)">💻 Electronics</button>
+          <button class="cat-chip" onclick="setCatFilter('Utilities', this)">💡 Electricity</button>
+          <button class="cat-chip" onclick="setCatFilter('Clothing', this)">👕 Clothing</button>
+          <button class="cat-chip" onclick="setCatFilter('Health', this)">🏥 Health</button>
+          <button class="cat-chip" onclick="setCatFilter('Others', this)">📦 Others</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="content">
+      <div class="content-header">
+        <div>
+          <div class="content-title">My Expenses</div>
+          <div class="content-sub" id="filter-label">All expense</div>
+        </div>
+        <button class="btn-add" onclick="openModal()">
+          <span>+</span> Add Expense
+        </button>
+      </div>
+      <div class="expense-list" id="expense-list"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ─────────────── MODAL ─────────────── -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">New Expense</div>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <input type="hidden" id="edit-id">
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="f-title" placeholder="e.g. Weekly groceries">
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Amount (₹)</label>
+        <input type="number" id="f-amount" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="f-date">
+      </div>
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select id="f-category">
+        <option value="Groceries">🛒 Groceries</option>
+        <option value="Leisure">🎮 Gaming</option>
+        <option value="Electronics">💻 Electronics</option>
+        <option value="Utilities">💡 Electricity</option>
+        <option value="Clothing">👕 Clothing</option>
+        <option value="Health">🏥 Health</option>
+        <option value="Others">📦 Others</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Description (optional)</label>
+      <input type="text" id="f-desc" placeholder="Thodi aur detail...">
+    </div>
+    <button class="btn-primary" onclick="saveExpense()">💾 Save Karo</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
